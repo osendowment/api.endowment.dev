@@ -5,77 +5,77 @@
 package main
 
 import (
-    "bytes"
-    "encoding/json"
-    "io"
-    "log"
-    "net/http"
-    "github.com/stripe/stripe-go/v82"
-    "github.com/stripe/stripe-go/v82/checkout/session"
+	"fmt"
+	"github.com/stripe/stripe-go/v82"
+	"github.com/stripe/stripe-go/v82/checkout/session"
+	"log"
+	"net/http"
+	"strconv"
 )
 
+var LISTEN_ADDR string = "localhost:3003"
+var WEBSITE_HOST string = "http://localhost:4321"
+var STRIPE_SECRET_KEY_TESTING = "sk_test_51RDs2UBNfHh1TmlN4IkM1YqbBD2mirTKWwXnRi0NwWNtpaDqsSbmoExALdrfgYHqexs0ftFt66bhmxdVinfDP8Re00siikHUPQ"
+
 func main() {
-  // This is our secret API key for the testing environment
-  stripe.Key = "sk_test_51RDs2UBNfHh1TmlN4IkM1YqbBD2mirTKWwXnRi0NwWNtpaDqsSbmoExALdrfgYHqexs0ftFt66bhmxdVinfDP8Re00siikHUPQ"
+	stripe.Key = STRIPE_SECRET_KEY_TESTING
+	http.HandleFunc("/create-checkout-session", createCheckoutSession)
+	log.Printf("Listening on %s", LISTEN_ADDR)
+	log.Fatal(http.ListenAndServe(LISTEN_ADDR, nil))
+}
 
-  http.HandleFunc("/create-checkout-session", createCheckoutSession)
-  http.HandleFunc("/session-status", retrieveCheckoutSession)
-
-  addr := "localhost:3003"
-  log.Printf("Listening on %s", addr)
-  log.Fatal(http.ListenAndServe(addr, nil))
+func redirectToCheckoutMessage(w http.ResponseWriter, r *http.Request, message string) {
+	http.Redirect(w, r, fmt.Sprintf("%s?checkoutMessage=%s#donate", WEBSITE_HOST, message), http.StatusSeeOther)
 }
 
 func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
-  domain := "http://localhost:4321"
-  params := &stripe.CheckoutSessionParams{
-    UIMode: stripe.String("embedded"),
-    ReturnURL: stripe.String(domain + "/thank-you?session_id={CHECKOUT_SESSION_ID}"),
-    LineItems: []*stripe.CheckoutSessionLineItemParams{
-      &stripe.CheckoutSessionLineItemParams{
-        Price: stripe.String("price_1RZq75BNfHh1TmlNRzCJj8Bx"),
-        Quantity: stripe.Int64(1),
-      },
-    },
-    Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
-    SubmitType: stripe.String("donate"),
-  }
+	err := r.ParseForm()
+	if err != nil {
+		log.Printf("r.ParseForm:", err)
+		redirectToCheckoutMessage(w, r, "An unknown error occurred. Please contact us.")
+		return
+	}
 
-  s, err := session.New(params)
+	customerEmail := r.PostFormValue("customerEmail")
+	// customerName := r.PostFormValue("customerName")
+	unitAmountString := r.PostFormValue("unitAmount")
+	unitAmount, err := strconv.ParseInt(unitAmountString, 10, 64)
+	if err != nil || unitAmount <= 0 {
+		log.Printf("strconv.Atoi:", err)
+		redirectToCheckoutMessage(w, r, "Invalid amount.")
+		return
+	}
 
-  if err != nil {
-    log.Printf("session.New: %v", err)
-  }
+	params := &stripe.CheckoutSessionParams{
+		CustomerEmail: stripe.String(customerEmail),
+		SuccessURL:    stripe.String(WEBSITE_HOST + "/thank-you?session_id={CHECKOUT_SESSION_ID}"),
+		CancelURL:     stripe.String(WEBSITE_HOST),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			&stripe.CheckoutSessionLineItemParams{
+				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+					Currency: stripe.String("usd"),
+					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+						Name: stripe.String("Open Source Endowment Donation"),
+					},
+					UnitAmount: stripe.Int64(unitAmount * 100),
+				},
+				Quantity: stripe.Int64(1),
+			},
+		},
+		Mode:       stripe.String(string(stripe.CheckoutSessionModePayment)),
+		SubmitType: stripe.String("donate"),
+	}
+	s, err := session.New(params)
 
-  writeJSON(w, struct {
-    ClientSecret string `json:"clientSecret"`
-  }{
-    ClientSecret: s.ClientSecret,
-  })
-}
+	if err != nil {
+		log.Printf("session.New: %v", err)
+		if stripeErr, ok := err.(*stripe.Error); ok {
+			redirectToCheckoutMessage(w, r, stripeErr.Msg)
+			return
+		}
+		redirectToCheckoutMessage(w, r, "An unknown error occurred. Please contact us.")
+		return
+	}
 
-func retrieveCheckoutSession(w http.ResponseWriter, r *http.Request) {
-  s, _ := session.Get(r.URL.Query().Get("session_id"), nil)
-
-  writeJSON(w, struct {
-    Status string `json:"status"`
-    CustomerEmail string `json:"customer_email"`
-  }{
-    Status: string(s.Status),
-    CustomerEmail: string(s.CustomerDetails.Email),
-  })
-}
-
-func writeJSON(w http.ResponseWriter, v interface{}) {
-  var buf bytes.Buffer
-  if err := json.NewEncoder(&buf).Encode(v); err != nil {
-    http.Error(w, err.Error(), http.StatusInternalServerError)
-    log.Printf("json.NewEncoder.Encode: %v", err)
-    return
-  }
-  w.Header().Set("Content-Type", "application/json")
-  if _, err := io.Copy(w, &buf); err != nil {
-    log.Printf("io.Copy: %v", err)
-    return
-  }
+	http.Redirect(w, r, s.URL, http.StatusSeeOther)
 }

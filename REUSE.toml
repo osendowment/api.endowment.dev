@@ -1,0 +1,12 @@
+version = 1
+
+[[annotations]]
+path = [
+    ".gitignore",
+    "REUSE.toml",
+    "contrib/api.endowment.dev.service",
+    "go.mod",
+    "go.sum",
+]
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "CC0-1.0"

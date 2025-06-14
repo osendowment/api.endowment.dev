@@ -1,0 +1,12 @@
+[Unit]
+Description=api.endowment.dev
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+WorkingDirectory=/srv/www/dev.endowment.api
+ExecStart=/srv/www/dev.endowment.api/bin/api.endowment.dev
+
+[Install]
+WantedBy=multi-user.target

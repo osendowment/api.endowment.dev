@@ -38,6 +38,7 @@ func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
       },
     },
     Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
+    SubmitType: stripe.String("donate"),
   }
 
   s, err := session.New(params)

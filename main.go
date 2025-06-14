@@ -27,10 +27,10 @@ func main() {
 }
 
 func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
-  domain := "http://api.endowment.dev:3003"
+  domain := "http://localhost:4321"
   params := &stripe.CheckoutSessionParams{
     UIMode: stripe.String("embedded"),
-    ReturnURL: stripe.String(domain + "/return.html?session_id={CHECKOUT_SESSION_ID}"),
+    ReturnURL: stripe.String(domain + "/thank-you?session_id={CHECKOUT_SESSION_ID}"),
     LineItems: []*stripe.CheckoutSessionLineItemParams{
       &stripe.CheckoutSessionLineItemParams{
         Price: stripe.String("price_1RZq75BNfHh1TmlNRzCJj8Bx"),

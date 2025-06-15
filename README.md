@@ -7,7 +7,7 @@ This is the API for the [Open Source Endowment][endowment] website. It currently
 To run locally:
 
 ```
-go run .
+STRIPE_SECRET_KEY="sk_..." WEBSITE_HOST="http://localhost:4321" go run .
 ```
 
 ## Authorship

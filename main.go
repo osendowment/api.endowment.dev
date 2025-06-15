@@ -10,15 +10,16 @@ import (
 	"github.com/stripe/stripe-go/v82/checkout/session"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 var LISTEN_ADDR string = "localhost:3003"
-var WEBSITE_HOST string = "http://localhost:4321"
-var STRIPE_SECRET_KEY_TESTING = "sk_test_51RDs2UBNfHh1TmlN4IkM1YqbBD2mirTKWwXnRi0NwWNtpaDqsSbmoExALdrfgYHqexs0ftFt66bhmxdVinfDP8Re00siikHUPQ"
+var WEBSITE_HOST string = os.Getenv("WEBSITE_HOST")
+var STRIPE_SECRET_KEY = os.Getenv("STRIPE_SECRET_KEY")
 
 func main() {
-	stripe.Key = STRIPE_SECRET_KEY_TESTING
+	stripe.Key = STRIPE_SECRET_KEY
 	http.HandleFunc("/create-checkout-session", createCheckoutSession)
 	log.Printf("Listening on %s", LISTEN_ADDR)
 	log.Fatal(http.ListenAndServe(LISTEN_ADDR, nil))
@@ -38,7 +39,10 @@ func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
 
 	customerEmail := r.PostFormValue("customerEmail")
 	// customerName := r.PostFormValue("customerName")
-	unitAmountString := r.PostFormValue("unitAmount")
+	unitAmountString := r.PostFormValue("presetAmount")
+	if unitAmountString == "custom" {
+		unitAmountString = r.PostFormValue("customAmount")
+	}
 	unitAmount, err := strconv.ParseInt(unitAmountString, 10, 64)
 	if err != nil || unitAmount <= 0 {
 		log.Printf("strconv.Atoi:", err)

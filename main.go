@@ -92,7 +92,7 @@ const BANK_DETAILS_TEMPLATE = `
 	<dt>Amount</dt>
 	<dd>{{ .Amount }} USD</dd>
 	<dt>Reference</dt>
-	<dd>{{ .Reference }}/FFC/202580213394/Open Source Endowment Foundation/1209 Orange Street, Wilmington, DE 19801</dd>
+	<dd>/FFC/202580213394/Open Source Endowment Foundation/{{ .Reference }}/1209 Orange Street, Wilmington, DE 19801</dd>
 </dl>
 `
 

@@ -7,6 +7,8 @@ Type=simple
 Restart=always
 WorkingDirectory=/srv/www/dev.endowment.api
 ExecStart=/srv/www/dev.endowment.api/bin/api.endowment.dev
+Environment="STRIPE_SECRET_KEY=sk_..."
+Environment="WEBSITE_HOST=https://ose-staging.vlad.website"
 
 [Install]
 WantedBy=multi-user.target

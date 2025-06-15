@@ -25,11 +25,9 @@ var STRIPE_SECRET_KEY = os.Getenv("STRIPE_SECRET_KEY")
 const BANK_DETAILS_TEMPLATE = `
 <p>
 	Please send a bank transfer using the following details. Make sure you
-	include the reference, so we can identify your payment. If you encounter
-	character limits, include as much of the provided information as possible.
+	include the reference, so we can identify your payment.
 </p>
 
-<h3>US Domestic Transfer</h3>
 <dl>
 	<dt>Beneficiary name</dt>
 	<dd>Open Source Endowment Foundation</dd>
@@ -45,24 +43,6 @@ const BANK_DETAILS_TEMPLATE = `
 	<dd>202580213394</dd>
 	<dt>Type of account</dt>
 	<dd>Checking</dd>
-	<dt>Amount</dt>
-	<dd>{{ .Amount }} USD</dd>
-	<dt>Reference</dt>
-	<dd>{{ .Reference }}</dd>
-</dl>
-
-<h3>USD International Transfer</h3>
-<dl>
-	<dt>Beneficiary name</dt>
-	<dd>Open Source Endowment Foundation</dd>
-	<dt>Beneficiary address</dt>
-	<dd>1209 Orange Street, Wilmington, DE 19801, USA</dd>
-	<dt>Bank name</dt>
-	<dd>Choice Financial Group</dd>
-	<dt>Bank address</dt>
-	<dd>4501 23rd Avenue S, Fargo, ND 58104, USA</dd>
-	<dt>ABA routing number</dt>
-	<dd>091311229</dd>
 	<dt>SWIFT/BIC code</dt>
 	<dd>CHFGUS44021</dd>
 	<dt>IBAN/account number</dt>
@@ -71,28 +51,6 @@ const BANK_DETAILS_TEMPLATE = `
 	<dd>{{ .Amount }} USD</dd>
 	<dt>Reference</dt>
 	<dd>{{ .Reference }}</dd>
-</dl>
-
-<h3>Non-USD International Transfer</h3>
-<dl>
-	<dt>Beneficiary name</dt>
-	<dd>Choice Financial Group</dd>
-	<dt>Beneficiary address</dt>
-	<dd>4501 23rd Ave S, Fargo, ND 58104, USA</dd>
-	<dt>Bank name</dt>
-	<dd>JP Morgan Chase Bank, N.A. - New York</dd>
-	<dt>Bank address</dt>
-	<dd>383 Madison Avenue, Floor 23, New York, NY 10017, USA</dd>
-	<dt>ABA routing number</dt>
-	<dd>021000021</dd>
-	<dt>SWIFT/BIC code</dt>
-	<dd>CHASUS33</dd>
-	<dt>IBAN/account number</dt>
-	<dd>707567692</dd>
-	<dt>Amount</dt>
-	<dd>{{ .Amount }} USD</dd>
-	<dt>Reference</dt>
-	<dd>/FFC/202580213394/Open Source Endowment Foundation/{{ .Reference }}/1209 Orange Street, Wilmington, DE 19801</dd>
 </dl>
 `
 

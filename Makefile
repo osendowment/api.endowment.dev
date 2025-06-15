@@ -9,5 +9,5 @@ bin/api.endowment.dev: main.go
 	go build -o bin/ .
 
 publish: bin/api.endowment.dev
-	rsync -Pvrthl --delete --exclude .git --info=progress2 ./ yavin:/srv/www/dev.endowment.api
+	rsync -Pvrthl --delete --exclude .git --exclude donors.csv --info=progress2 ./ yavin:/srv/www/dev.endowment.api
 	ssh yavin 'doas systemctl restart api.endowment.dev'

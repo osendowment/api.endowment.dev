@@ -6,6 +6,7 @@ package main
 
 import (
 	"crypto/md5"
+	"encoding/csv"
 	"encoding/hex"
 	"fmt"
 	"github.com/stripe/stripe-go/v82"
@@ -15,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 const LISTEN_ADDR = "localhost:3003"
@@ -99,6 +101,21 @@ type BankDetailsParams struct {
 	Reference string
 }
 
+type DonationMethod string
+const (
+	MethodStripe DonationMethod = "stripe"
+	MethodBank = "bank"
+)
+
+type Donor struct {
+	Email string
+	Name string
+	Amount int64
+	Method DonationMethod
+	Reference string
+	Time time.Time
+}
+
 func main() {
 	stripe.Key = STRIPE_SECRET_KEY
 	http.HandleFunc("/create-checkout-session", createCheckoutSession)
@@ -109,7 +126,7 @@ func main() {
 }
 
 func enableCors(w *http.ResponseWriter) {
-    (*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func redirectToCheckoutMessage(w http.ResponseWriter, r *http.Request, message string) {
@@ -120,6 +137,24 @@ func redirectToThankYou(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("%s/thank-you", WEBSITE_HOST), http.StatusSeeOther)
 }
 
+func logDonor(donor Donor) {
+	f, err := os.OpenFile("donors.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		log.Printf("os.OpenFile: %v", err)
+		return
+	}
+	w := csv.NewWriter(f)
+	w.Write([]string{
+		donor.Time.Format("2006-01-02 15:04:05"),
+		donor.Email,
+		donor.Name,
+		strconv.FormatInt(donor.Amount, 10),
+		string(donor.Method),
+		donor.Reference,
+	})
+	w.Flush()
+}
+
 func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -128,8 +163,8 @@ func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	customerEmail := r.PostFormValue("customerEmail")
-	// customerName := r.PostFormValue("customerName")
+	donorEmail := r.PostFormValue("donorEmail")
+	donorName := r.PostFormValue("donorName")
 	unitAmountString := r.PostFormValue("presetAmount")
 	if unitAmountString == "custom" {
 		unitAmountString = r.PostFormValue("customAmount")
@@ -142,7 +177,7 @@ func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
 	}
 
 	params := &stripe.CheckoutSessionParams{
-		CustomerEmail: stripe.String(customerEmail),
+		CustomerEmail: stripe.String(donorEmail),
 		SuccessURL:    stripe.String(WEBSITE_HOST + "/thank-you?session_id={CHECKOUT_SESSION_ID}"),
 		CancelURL:     stripe.String(WEBSITE_HOST),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{
@@ -172,7 +207,14 @@ func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Log user data.
+	logDonor(Donor{
+		Name: donorName,
+		Email: donorEmail,
+		Amount: unitAmount,
+		Method: MethodStripe,
+		Reference: "",
+		Time: time.Now(),
+	})
 
 	http.Redirect(w, r, s.URL, http.StatusSeeOther)
 }
@@ -186,8 +228,7 @@ func createBankDetails(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	customerEmail := r.PostFormValue("customerEmail")
-	// customerName := r.PostFormValue("customerName")
+	donorEmail := r.PostFormValue("donorEmail")
 	unitAmountString := r.PostFormValue("presetAmount")
 	if unitAmountString == "custom" {
 		unitAmountString = r.PostFormValue("customAmount")
@@ -200,7 +241,7 @@ func createBankDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h := md5.New()
-	h.Write([]byte(customerEmail))
+	h.Write([]byte(donorEmail))
 	h.Write([]byte(unitAmountString))
 	reference := hex.EncodeToString(h.Sum(nil))[:6]
 
@@ -224,8 +265,8 @@ func recordBankTransfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// customerEmail := r.PostFormValue("customerEmail")
-	// customerName := r.PostFormValue("customerName")
+	donorEmail := r.PostFormValue("donorEmail")
+	donorName := r.PostFormValue("donorName")
 	unitAmountString := r.PostFormValue("presetAmount")
 	if unitAmountString == "custom" {
 		unitAmountString = r.PostFormValue("customAmount")
@@ -237,7 +278,19 @@ func recordBankTransfer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Log user data.
+	h := md5.New()
+	h.Write([]byte(donorEmail))
+	h.Write([]byte(unitAmountString))
+	reference := hex.EncodeToString(h.Sum(nil))[:6]
+
+	logDonor(Donor{
+		Name: donorName,
+		Email: donorEmail,
+		Amount: unitAmount,
+		Method: MethodBank,
+		Reference: reference,
+		Time: time.Now(),
+	})
 
 	redirectToThankYou(w, r)
 }

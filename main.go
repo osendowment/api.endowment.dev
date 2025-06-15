@@ -178,7 +178,7 @@ func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func createBankDetails(w http.ResponseWriter, r *http.Request) {
-	enableCors(&w)
+	// enableCors(&w)
 	err := r.ParseForm()
 	if err != nil {
 		log.Printf("r.ParseForm:", err)

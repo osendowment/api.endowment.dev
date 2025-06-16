@@ -39,14 +39,12 @@ const BANK_DETAILS_TEMPLATE = `
 	<dd>4501 23rd Avenue S, Fargo, ND 58104, USA</dd>
 	<dt>ABA routing number</dt>
 	<dd>091311229</dd>
-	<dt>Account number</dt>
+	<dt>IBAN/Account number</dt>
 	<dd>202580213394</dd>
-	<dt>Type of account</dt>
-	<dd>Checking</dd>
 	<dt>SWIFT/BIC code</dt>
 	<dd>CHFGUS44021</dd>
-	<dt>IBAN/account number</dt>
-	<dd>202580213394</dd>
+	<dt>Type of account</dt>
+	<dd>Checking</dd>
 	<dt>Amount</dt>
 	<dd>{{ .Amount }} USD</dd>
 	<dt>Reference</dt>

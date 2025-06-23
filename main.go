@@ -134,6 +134,11 @@ func createCheckoutSession(w http.ResponseWriter, r *http.Request) {
 
 	params := &stripe.CheckoutSessionParams{
 		CustomerEmail: stripe.String(donorEmail),
+		Metadata: map[string]string{
+			"donation_form_name": donorName,
+			"donation_form_email": donorEmail,
+			"donation_form_amount": unitAmountString,
+		},
 		SuccessURL:    stripe.String(WEBSITE_HOST + "/thank-you?session_id={CHECKOUT_SESSION_ID}"),
 		CancelURL:     stripe.String(WEBSITE_HOST),
 		LineItems: []*stripe.CheckoutSessionLineItemParams{

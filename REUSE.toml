@@ -4,6 +4,7 @@ version = 1
 path = [
     ".gitignore",
     "REUSE.toml",
+    "bin/*",
     "contrib/api.endowment.dev.service",
     "go.mod",
     "go.sum",

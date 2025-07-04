@@ -7,7 +7,12 @@ Type=simple
 Restart=always
 WorkingDirectory=/srv/www/dev.endowment.api
 ExecStart=/srv/www/dev.endowment.api/bin/api.endowment.dev
-Environment="STRIPE_SECRET_KEY=sk_..."
+Environment="API_HOST=..."
+Environment="WEBSITE_HOST=..."
+Environment="STRIPE_SECRET_KEY=..."
+Environment="MERCURY_API_TOKEN=..."
+Environment="RESEND_API_TOKEN=..."
+Environment="DATABASE_URL=..."
 Environment="WEBSITE_HOST=https://ose-staging.vlad.website"
 
 [Install]
